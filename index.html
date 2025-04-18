@@ -7,20 +7,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Registro de usuarios -->
-  <div id="register-container" style="display: none;">
-    <h1>Registrarse</h1>
-    <form id="register-form">
-      <input type="text" id="register-name" placeholder="Nombre completo" required>
-      <input type="email" id="register-email" placeholder="Correo electrónico" required>
-      <input type="password" id="register-password" placeholder="Contraseña" required>
-      <button type="submit">Registrarse</button>
-    </form>
-    <p id="register-success" class="success" style="display: none;">Registro exitoso. Ahora inicia sesión.</p>
-    <p id="register-error" class="error"></p>
-    <button id="go-to-login">¿Ya tienes cuenta? Inicia sesión</button>
-  </div>
-
   <!-- Inicio de sesión -->
   <div id="login-container">
     <h1>Iniciar Sesión</h1>
@@ -30,7 +16,6 @@
       <button type="submit">Ingresar</button>
     </form>
     <p id="login-error" class="error"></p>
-    <button id="go-to-register">¿No tienes cuenta? Regístrate</button>
   </div>
 
   <!-- Gestión de turnos (oculta por defecto) -->
