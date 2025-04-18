@@ -11,7 +11,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',           // Usuario de MySQL
     password: '12345', // Agrega aquí tu contraseña de MySQL
-    database: 'salud_total' // Asegúrate de que la base de datos exista en tu servidor MySQL
+    database: 'salud_total_db' // Asegúrate de que la base de datos exista en tu servidor MySQL
 });
 
 db.connect(err => {
