@@ -18,17 +18,31 @@
     <p id="login-error" class="error"></p>
   </div>
 
-  <!-- Gestión de turnos (oculta por defecto) -->
+  <!-- Gestión de turnos -->
   <div id="dashboard-container" style="display: none;">
     <h1>Gestión de Turnos</h1>
     <button id="logout-button">Cerrar Sesión</button>
 
     <h2>Solicitar Turno</h2>
     <form id="turno-form">
-      <input type="text" id="especialidad" placeholder="Especialidad" required>
-      <input type="text" id="profesional" placeholder="Nombre del Profesional" required>
+      <label for="especialidad">Especialidad:</label>
+      <select id="especialidad" required>
+        <option value="" disabled selected>Seleccione un área</option>
+      </select>
+
+      <label for="profesional">Profesional:</label>
+      <select id="profesional" required>
+        <option value="" disabled selected>Seleccione un profesional</option>
+      </select>
+
+      <label for="fecha-turno">Fecha:</label>
       <input type="date" id="fecha-turno" required>
-      <input type="time" id="hora-turno" required>
+
+      <label for="hora-turno">Hora:</label>
+      <select id="hora-turno" required>
+        <option value="" disabled selected>Seleccione una hora</option>
+      </select>
+
       <button type="submit">Pedir Turno</button>
     </form>
 
