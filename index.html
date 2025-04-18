@@ -3,19 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inicio de Sesión</title>
+  <title>Gestión de Turnos</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Registro de usuarios -->
+  <div id="register-container" style="display: none;">
+    <h1>Registrarse</h1>
+    <form id="register-form">
+      <input type="text" id="register-name" placeholder="Nombre completo" required>
+      <input type="email" id="register-email" placeholder="Correo electrónico" required>
+      <input type="password" id="register-password" placeholder="Contraseña" required>
+      <button type="submit">Registrarse</button>
+    </form>
+    <p id="register-success" class="success" style="display: none;">Registro exitoso. Ahora inicia sesión.</p>
+    <p id="register-error" class="error"></p>
+    <button id="go-to-login">¿Ya tienes cuenta? Inicia sesión</button>
+  </div>
+
+  <!-- Inicio de sesión -->
   <div id="login-container">
     <h1>Iniciar Sesión</h1>
     <form id="login-form">
-      <input type="text" id="username" placeholder="Usuario" required>
-      <input type="password" id="password" placeholder="Contraseña" required>
+      <input type="email" id="login-email" placeholder="Correo electrónico" required>
+      <input type="password" id="login-password" placeholder="Contraseña" required>
       <button type="submit">Ingresar</button>
     </form>
     <p id="login-error" class="error"></p>
+    <button id="go-to-register">¿No tienes cuenta? Regístrate</button>
   </div>
+
+  <!-- Gestión de turnos (oculta por defecto) -->
+  <div id="dashboard-container" style="display: none;">
+    <h1>Gestión de Turnos</h1>
+    <button id="logout-button">Cerrar Sesión</button>
+
+    <h2>Solicitar Turno</h2>
+    <form id="turno-form">
+      <input type="text" id="especialidad" placeholder="Especialidad" required>
+      <input type="text" id="profesional" placeholder="Nombre del Profesional" required>
+      <input type="date" id="fecha-turno" required>
+      <input type="time" id="hora-turno" required>
+      <button type="submit">Pedir Turno</button>
+    </form>
+
+    <h2>Turnos Solicitados</h2>
+    <ul id="turnos-list"></ul>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
