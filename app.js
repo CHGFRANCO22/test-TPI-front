@@ -57,15 +57,36 @@ turnoForm.addEventListener("submit", (e) => {
   const fecha = document.getElementById("fecha-turno").value;
   const hora = document.getElementById("hora-turno").value;
 
-  // Eliminar el horario elegido de los horarios disponibles
-  horariosDisponibles = horariosDisponibles.filter(h => h !== hora);
-  cargarHorarios(); // Actualizar lista de horarios
+  if (!especialidad || !profesional || !fecha || !hora) {
+    alert("Por favor complete todos los campos");
+    return;
+  }
 
-  // Crear el turno y mostrarlo
-  const turno = `Especialidad: ${especialidad}, Profesional: ${profesional}, Fecha: ${fecha}, Hora: ${hora}`;
-  const li = document.createElement("li");
-  li.textContent = turno;
-  turnosList.appendChild(li);
+  fetch("http://localhost:3000/turnos", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      especialidad,
+      profesional,
+      fecha,
+      hora
+    })
+  })
+    .then(response => response.text())
+    .then(data => {
+      // Mostrar el turno registrado en la lista
+      const turno = `Especialidad: ${especialidad}, Profesional: ${profesional}, Fecha: ${fecha}, Hora: ${hora}`;
+      const li = document.createElement("li");
+      li.textContent = turno;
+      turnosList.appendChild(li);
 
-  turnoForm.reset();
+      horariosDisponibles = horariosDisponibles.filter(h => h !== hora);
+      cargarHorarios(); // Actualizar lista de horarios
+
+      turnoForm.reset();
+      console.log(data); // Ver respuesta del servidor
+    })
+    .catch(error => console.error('Error al registrar turno:', error));
 });

@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const bcrypt = require('bcrypt'); // Para encriptar contraseñas
 
 const app = express();
 app.use(cors());
@@ -23,7 +24,7 @@ db.connect(err => {
 });
 
 // Registro de una persona y paciente
-app.post('/register', (req, res) => {
+app.post('/register', async (req, res) => {
     console.log('Datos recibidos para registro:', req.body); // Log para verificar datos recibidos
 
     const { nombre_completo, dni, sexo, email, password } = req.body;
@@ -34,50 +35,58 @@ app.post('/register', (req, res) => {
         return;
     }
 
-    // Verificar si el DNI ya existe
-    const checkDniQuery = "SELECT * FROM persona WHERE dni = ?";
-    db.query(checkDniQuery, [dni], (err, results) => {
-        if (err) {
-            console.error('Error al verificar el DNI:', err);
-            res.status(500).send('Error al verificar el DNI');
-            return;
-        }
+    try {
+        // Verificar si el DNI ya existe
+        const checkDniQuery = "SELECT * FROM persona WHERE dni = ?";
+        db.query(checkDniQuery, [dni], (err, results) => {
+            if (err) {
+                console.error('Error al verificar el DNI:', err);
+                res.status(500).send('Error al verificar el DNI');
+                return;
+            }
 
-        if (results.length > 0) {
-            res.status(400).send('El DNI ya está registrado');
-            return;
-        } else {
-            // Insertar en la tabla `persona`
-            const sqlPersona = "INSERT INTO persona (nombre_completo, dni, sexo) VALUES (?, ?, ?)";
-            db.query(sqlPersona, [nombre_completo, dni, sexo], (err, result) => {
-                if (err) {
-                    console.error('Error al registrar persona:', err);
-                    res.status(500).send('Error al registrar persona');
-                    return;
-                }
-
-                const id_persona = result.insertId; // Obtener ID de persona
-                console.log('Persona registrada con ID:', id_persona);
-
-                // Insertar en la tabla `pacientes`
-                const sqlPaciente = "INSERT INTO pacientes (id_persona, email, password) VALUES (?, ?, ?)";
-                db.query(sqlPaciente, [id_persona, email, password], (err, result) => {
+            if (results.length > 0) {
+                res.status(400).send('El DNI ya está registrado');
+                return;
+            } else {
+                // Insertar en la tabla `persona`
+                const sqlPersona = "INSERT INTO persona (nombre_completo, dni, sexo) VALUES (?, ?, ?)";
+                db.query(sqlPersona, [nombre_completo, dni, sexo], async (err, result) => {
                     if (err) {
-                        console.error('Error al registrar paciente:', err);
-                        res.status(500).send('Error al registrar paciente');
+                        console.error('Error al registrar persona:', err);
+                        res.status(500).send('Error al registrar persona');
                         return;
                     }
 
-                    console.log('Paciente registrado con éxito:', { email });
-                    res.send('Paciente registrado exitosamente');
+                    const id_persona = result.insertId; // Obtener ID de persona
+                    console.log('Persona registrada con ID:', id_persona);
+
+                    // Encriptar contraseña
+                    const hashedPassword = await bcrypt.hash(password, 10);
+
+                    // Insertar en la tabla `pacientes`
+                    const sqlPaciente = "INSERT INTO pacientes (id_persona, email, password) VALUES (?, ?, ?)";
+                    db.query(sqlPaciente, [id_persona, email, hashedPassword], (err, result) => {
+                        if (err) {
+                            console.error('Error al registrar paciente:', err);
+                            res.status(500).send('Error al registrar paciente');
+                            return;
+                        }
+
+                        console.log('Paciente registrado con éxito:', { email });
+                        res.send('Paciente registrado exitosamente');
+                    });
                 });
-            });
-        }
-    });
+            }
+        });
+    } catch (error) {
+        console.error('Error en el proceso de registro:', error);
+        res.status(500).send('Error en el servidor');
+    }
 });
 
 // Inicio de sesión
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     console.log('Datos recibidos para login:', req.body); // Log para verificar datos recibidos
 
     const { email, password } = req.body;
@@ -88,8 +97,8 @@ app.post('/login', (req, res) => {
         return;
     }
 
-    const sql = "SELECT * FROM pacientes WHERE email = ? AND password = ?";
-    db.query(sql, [email, password], (err, results) => {
+    const sql = "SELECT * FROM pacientes WHERE email = ?";
+    db.query(sql, [email], async (err, results) => {
         if (err) {
             console.error('Error al verificar credenciales:', err);
             res.status(500).send('Error en el servidor');
@@ -97,10 +106,17 @@ app.post('/login', (req, res) => {
         }
 
         if (results.length > 0) {
-            console.log('Inicio de sesión exitoso para:', email);
-            res.send('Inicio de sesión exitoso');
+            // Comparar contraseña encriptada
+            const match = await bcrypt.compare(password, results[0].password);
+            if (match) {
+                console.log('Inicio de sesión exitoso para:', email);
+                res.send('Inicio de sesión exitoso');
+            } else {
+                console.log('Credenciales incorrectas para:', email);
+                res.status(401).send('Correo o contraseña incorrectos');
+            }
         } else {
-            console.log('Credenciales incorrectas para:', email);
+            console.log('Correo no registrado:', email);
             res.status(401).send('Correo o contraseña incorrectos');
         }
     });
