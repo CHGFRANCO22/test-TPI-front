@@ -1,0 +1,98 @@
+CREATE DATABASE salud_total_db;
+
+USE salud_total_db;
+
+-- 2. Tabla persona: almacena la información básica de cada persona.
+-- Se usa UPPER(sexo) en el CHECK para aceptar 'M' o 'F' sin importar el caso.
+CREATE TABLE persona(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_completo VARCHAR(100) NOT NULL,
+    dni VARCHAR(11) UNIQUE NOT NULL,
+    sexo VARCHAR(1) NOT NULL,
+    CONSTRAINT chk_sexo CHECK (UPPER(sexo) IN ('M', 'F'))
+);
+
+-- 3. Tabla pacientes: cada persona que se registre automáticamente será paciente.
+
+CREATE TABLE pacientes(
+    id_persona INT NOT NULL,
+    id_paciente INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_persona) REFERENCES persona(id)
+);
+
+-- 4. Tabla profesionales: se agregarán manualmente desde la aplicación de escritorio.
+
+CREATE TABLE profesionales(
+    id_persona INT NOT NULL,
+    id_profesional INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    rol SET('profesional', 'admin') NOT NULL DEFAULT 'profesional',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_persona) REFERENCES persona(id)
+);
+
+-- 5. Tabla especialidades: almacena las especialidades médicas disponibles.
+CREATE TABLE especialidades(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Insertamos las especialidades fijas.
+INSERT INTO especialidades (nombre) VALUES 
+    ('Clínica General'), 
+    ('Pediatría'), 
+    ('Cardiología'), 
+    ('Ginecología');
+
+-- 6. Tabla profesional_especialidad: relación muchos a muchos entre profesionales y especialidades.
+CREATE TABLE profesional_especialidad(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_profesional INT NOT NULL,
+    id_especialidad INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_profesional) REFERENCES profesionales(id_profesional),
+    FOREIGN KEY (id_especialidad) REFERENCES especialidades(id)
+);
+
+-- 7. Tabla agenda_medicos: registra la disponibilidad horaria de cada profesional.
+CREATE TABLE agenda_medicos(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_profesional INT NOT NULL,
+    fecha DATE NOT NULL,         -- Día específico de disponibilidad
+    hora_inicio TIME NOT NULL,   -- Inicio del bloque de atención
+    hora_fin TIME NOT NULL,      -- Fin del bloque de atención
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_profesional) REFERENCES profesionales(id_profesional)
+);
+
+-- 8. Tabla turnos: registra las citas, vinculando un turno a un paciente, a un profesional y a una especialidad.
+CREATE TABLE turnos(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    id_paciente INT NOT NULL,
+    id_profesional INT NOT NULL,
+    id_especialidad INT NOT NULL,
+    fecha_turno DATETIME NOT NULL,                      -- Fecha y hora programada de la cita
+    fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP, -- Momento en que se solicita el turno
+    fecha_confirmacion DATETIME DEFAULT NULL,           -- Se actualizará cuando se confirme el turno (por el backend)
+    estado ENUM('confirmado', 'cancelado', 'rechazado', 'reprogramado') DEFAULT 'confirmado',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_paciente) REFERENCES pacientes(id_paciente),
+    FOREIGN KEY (id_profesional) REFERENCES profesionales(id_profesional),
+    FOREIGN KEY (id_especialidad) REFERENCES especialidades(id)
+);
+
+-- 9. Índices para optimizar consultas en la tabla turnos
+CREATE INDEX idx_turnos_especialidad ON turnos(id_especialidad);
+CREATE INDEX idx_turnos_profesional ON turnos(id_profesional);
+CREATE INDEX idx_turnos_fecha ON turnos(fecha_turno);
