@@ -10,7 +10,7 @@ app.use(express.json()); // Permitir parsing de JSON en las solicitudes
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '12345', // Cambiar por la contraseña configurada en tu MySQL
+    password: '12345', // Cambiar por la contraseña de tu MySQL
     database: 'salud_total_db'
 });
 
@@ -22,13 +22,13 @@ db.connect(err => {
     console.log('Conexión a la base de datos exitosa');
 });
 
-// Registro de un paciente (primero como persona, luego como paciente)
+// Registro de una persona
 app.post('/register', (req, res) => {
-    const { nombre_completo, dni, sexo, email, password } = req.body;
+    const { nombre_completo, dni, sexo } = req.body;
 
     // Validar datos recibidos
-    if (!nombre_completo || !dni || !sexo || !email || !password) {
-        res.status(400).send('Faltan datos necesarios para el registro');
+    if (!nombre_completo || !dni || !sexo) {
+        res.status(400).send('Faltan datos necesarios para el registro de persona');
         return;
     }
 
@@ -41,19 +41,20 @@ app.post('/register', (req, res) => {
             return;
         }
 
-        const id_persona = result.insertId; // Obtener el ID generado para la persona
+        res.send('Persona registrada exitosamente');
+    });
+});
 
-        // Insertar en la tabla `pacientes` utilizando el ID de persona
-        const sqlPaciente = "INSERT INTO pacientes (id_persona, email, password) VALUES (?, ?, ?)";
-        db.query(sqlPaciente, [id_persona, email, password], (err, result) => {
-            if (err) {
-                console.error('Error al registrar paciente:', err);
-                res.status(500).send('Error al registrar paciente');
-                return;
-            }
-
-            res.send('Paciente registrado exitosamente');
-        });
+// Obtener todas las personas
+app.get('/personas', (req, res) => {
+    const sql = "SELECT * FROM persona";
+    db.query(sql, (err, results) => {
+        if (err) {
+            res.status(500).send('Error al obtener personas');
+            console.error(err);
+        } else {
+            res.json(results);
+        }
     });
 });
 
