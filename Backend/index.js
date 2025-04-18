@@ -1,17 +1,17 @@
 const express = require('express');
-const mysql = require('mysql2'); // Asegúrate de usar mysql2
+const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Permitir parsing de JSON en solicitudes
+app.use(express.json()); // Permitir parsing de JSON en las solicitudes
 
 // Conexión a la base de datos MySQL
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root',           // Usuario de MySQL
-    password: '12345', // Agrega aquí tu contraseña de MySQL
-    database: 'salud_total_db' // Asegúrate de que la base de datos exista en tu servidor MySQL
+    user: 'root',
+    password: '12345', // Cambiar por la contraseña configurada en tu MySQL
+    database: 'salud_total_db'
 });
 
 db.connect(err => {
@@ -22,62 +22,38 @@ db.connect(err => {
     console.log('Conexión a la base de datos exitosa');
 });
 
-// Rutas del backend
-
-// Registro de usuarios
+// Registro de un paciente (primero como persona, luego como paciente)
 app.post('/register', (req, res) => {
-    const { nombre, email, password } = req.body;
-    const sql = "INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)";
-    db.query(sql, [nombre, email, password], (err, result) => {
-        if (err) {
-            res.status(500).send('Error al registrar usuario');
-            console.error(err);
-        } else {
-            res.send('Usuario registrado exitosamente');
-        }
-    });
-});
+    const { nombre_completo, dni, sexo, email, password } = req.body;
 
-// Inicio de sesión
-app.post('/login', (req, res) => {
-    const { email, password } = req.body;
-    const sql = "SELECT * FROM usuarios WHERE email = ? AND password = ?";
-    db.query(sql, [email, password], (err, results) => {
-        if (err) {
-            res.status(500).send('Error en el inicio de sesión');
-            console.error(err);
-        } else if (results.length > 0) {
-            res.send('Inicio de sesión exitoso');
-        } else {
-            res.status(401).send('Credenciales incorrectas');
-        }
-    });
-});
+    // Validar datos recibidos
+    if (!nombre_completo || !dni || !sexo || !email || !password) {
+        res.status(400).send('Faltan datos necesarios para el registro');
+        return;
+    }
 
-// Obtener turnos
-app.get('/turnos', (req, res) => {
-    const sql = "SELECT * FROM turnos";
-    db.query(sql, (err, results) => {
+    // Insertar en la tabla `persona`
+    const sqlPersona = "INSERT INTO persona (nombre_completo, dni, sexo) VALUES (?, ?, ?)";
+    db.query(sqlPersona, [nombre_completo, dni, sexo], (err, result) => {
         if (err) {
-            res.status(500).send('Error al obtener turnos');
-            console.error(err);
-        } else {
-            res.json(results);
+            console.error('Error al registrar persona:', err);
+            res.status(500).send('Error al registrar persona');
+            return;
         }
-    });
-});
 
-// Crear un turno
-app.post('/turnos', (req, res) => {
-    const { especialidad, profesional, fecha, hora, paciente_id } = req.body;
-    const sql = "INSERT INTO turnos (especialidad, profesional, fecha, hora, paciente_id) VALUES (?, ?, ?, ?, ?)";
-    db.query(sql, [especialidad, profesional, fecha, hora, paciente_id], (err, result) => {
-        if (err) {
-            res.status(500).send('Error al crear turno');
-            console.error(err);
-        } else {
-            res.send('Turno creado exitosamente');
-        }
+        const id_persona = result.insertId; // Obtener el ID generado para la persona
+
+        // Insertar en la tabla `pacientes` utilizando el ID de persona
+        const sqlPaciente = "INSERT INTO pacientes (id_persona, email, password) VALUES (?, ?, ?)";
+        db.query(sqlPaciente, [id_persona, email, password], (err, result) => {
+            if (err) {
+                console.error('Error al registrar paciente:', err);
+                res.status(500).send('Error al registrar paciente');
+                return;
+            }
+
+            res.send('Paciente registrado exitosamente');
+        });
     });
 });
 
