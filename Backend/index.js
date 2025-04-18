@@ -1,17 +1,17 @@
 const express = require('express');
-const mysql = require('mysql2'); // Usa mysql2
+const mysql = require('mysql2'); // Asegúrate de usar mysql2
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json()); // Permitir parsing de JSON en las solicitudes
+app.use(express.json()); // Permitir parsing de JSON en solicitudes
 
 // Conexión a la base de datos MySQL
 const db = mysql.createConnection({
     host: 'localhost',
-    user: 'root',      // Cambiar por tu usuario de MySQL
-    password: '',      // Cambiar por tu contraseña de MySQL
-    database: 'salud_total' // Cambiar por el nombre de tu base de datos
+    user: 'root',           // Usuario de MySQL
+    password: '12345', // Agrega aquí tu contraseña de MySQL
+    database: 'salud_total' // Asegúrate de que la base de datos exista en tu servidor MySQL
 });
 
 db.connect(err => {
@@ -22,7 +22,7 @@ db.connect(err => {
     console.log('Conexión a la base de datos exitosa');
 });
 
-// Endpoints del servidor
+// Rutas del backend
 
 // Registro de usuarios
 app.post('/register', (req, res) => {
@@ -67,7 +67,7 @@ app.get('/turnos', (req, res) => {
     });
 });
 
-// Crear turno
+// Crear un turno
 app.post('/turnos', (req, res) => {
     const { especialidad, profesional, fecha, hora, paciente_id } = req.body;
     const sql = "INSERT INTO turnos (especialidad, profesional, fecha, hora, paciente_id) VALUES (?, ?, ?, ?, ?)";
